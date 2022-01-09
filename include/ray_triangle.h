@@ -1,6 +1,7 @@
 #include "octree.h"
 #include "trimesh.h"
 #include "util.h"
+#include <omp.h>
 
 template <typename T>
 std::vector<std::array<T,3>> Vector2Array(const std::vector<std::vector<T>> & mat) {
@@ -72,23 +73,42 @@ std::tuple< std::vector<std::vector<double>>, std::vector<std::vector<int>>, std
 	{
 		std::array<double,3> ray_point = ray_points[i];
 		std::array<double,3> ray_dir   = ray_direction[i];
+		std::array<double,3> ray_dir_n = ray_direction[i];
+		ray_dir_n.at(0) *=-1;
+		ray_dir_n.at(1) *=-1;
+		ray_dir_n.at(2) *=-1;
+
 		std::vector<std::array<double, 3>> inter_pt;
 		std::vector<array<int, 1>> inter_face_idx;
+		std::vector<std::array<double, 3>> inter_pt_n;
+		std::vector<array<int, 1>> inter_face_idx_n;
 		tie(inter_pt, inter_face_idx) = tree.query(ray_point, ray_dir);
+		tie(inter_pt_n, inter_face_idx_n) = tree.query(ray_point, ray_dir_n);
 		
-		if (inter_pt.size()!=0)
-		{
-			
+		
+		double dist = std::numeric_limits<double>::max();
+		if (inter_pt.size()!=0){
 			auto inter_pt_x = inter_pt[0].at(0);
 			auto inter_pt_y = inter_pt[0].at(1);
 			auto inter_pt_z = inter_pt[0].at(2);
-			auto dist = std::sqrt((inter_pt_x-ray_pts[i][0])*(inter_pt_x-ray_pts[i][0])+ (inter_pt_y-ray_pts[i][1])*(inter_pt_y-ray_pts[i][1])+ (inter_pt_z-ray_pts[i][2])*(inter_pt_z-ray_pts[i][2]));
-			if (dist < 0.02)
+			dist = std::sqrt((inter_pt_x-ray_pts[i][0])*(inter_pt_x-ray_pts[i][0])+ (inter_pt_y-ray_pts[i][1])*(inter_pt_y-ray_pts[i][1])+ (inter_pt_z-ray_pts[i][2])*(inter_pt_z-ray_pts[i][2]));
+		}
+		double dist_n = std::numeric_limits<double>::max();
+		if (inter_pt_n.size()!=0){
+			auto inter_pt_x_n = inter_pt_n[0].at(0);
+			auto inter_pt_y_n = inter_pt_n[0].at(1);
+			auto inter_pt_z_n = inter_pt_n[0].at(2);
+			dist_n = std::sqrt((inter_pt_x_n-ray_pts[i][0])*(inter_pt_x_n-ray_pts[i][0])+ (inter_pt_y_n-ray_pts[i][1])*(inter_pt_y_n-ray_pts[i][1])+ (inter_pt_z_n-ray_pts[i][2])*(inter_pt_z_n-ray_pts[i][2]));
+		
+		}
+		
+		if (dist < 0.02&&dist<dist_n)
 			{
+			
 			std::vector<double> inter_pt_cor;
-			inter_pt_cor.push_back(inter_pt_x);
-			inter_pt_cor.push_back(inter_pt_y);
-			inter_pt_cor.push_back(inter_pt_z);
+			inter_pt_cor.push_back(inter_pt[0].at(0));
+			inter_pt_cor.push_back(inter_pt[0].at(1));
+			inter_pt_cor.push_back(inter_pt[0].at(2));
 			inter_pts.push_back(inter_pt_cor);
 			std::vector<int> inter_idx_per_face;
 			inter_idx_per_face.push_back(inter_face_idx[0].at(0));
@@ -97,15 +117,24 @@ std::tuple< std::vector<std::vector<double>>, std::vector<std::vector<int>>, std
 			inter_idx_target_face.push_back(inter_idx_per_face);
 			inter_idx_ray_vert.push_back(inter_idx_per_ray);
 			}
-		}
-		
+		else if (dist_n < 0.02&&dist_n<=dist)
+			{
+			
+			std::vector<double> inter_pt_cor;
+			inter_pt_cor.push_back(inter_pt_n[0].at(0));
+			inter_pt_cor.push_back(inter_pt_n[0].at(1));
+			inter_pt_cor.push_back(inter_pt_n[0].at(2));
+			inter_pts.push_back(inter_pt_cor);
+			std::vector<int> inter_idx_per_face;
+			inter_idx_per_face.push_back(inter_face_idx_n[0].at(0));
+			std::vector<int> inter_idx_per_ray;
+			inter_idx_per_ray.push_back(i);
+			inter_idx_target_face.push_back(inter_idx_per_face);
+			inter_idx_ray_vert.push_back(inter_idx_per_ray);
+			}
 		
 		
 	}
-
-
-
-	
 
 	return std::make_tuple(inter_pts, inter_idx_target_face, inter_idx_ray_vert);
 
