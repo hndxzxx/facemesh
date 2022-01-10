@@ -7,7 +7,7 @@
 #include "ray_triangle.h"
 #include <string>
 #include <Eigen/Dense>
-#include <omp.h>
+
 using namespace std;
 using namespace Eigen;
 
@@ -15,7 +15,7 @@ int main()
 {
 
   std::string filename = "C:/Users/xxzeng/Desktop/Anaconda/C++/mesh/data/116_18_grin_reg_scan.obj";
-  std::string scan_trans_path = "C:/Users/xxzeng/Desktop/Anaconda/C++/mesh/data/116_18_grin_scan_trans.obj";
+  std::string scan_trans_path = "C:/Users/xxzeng/Desktop/Anaconda/C++/mesh/data/116_18_grin_scan_trans_simplified.obj";
   trimesh mesh1;
   mesh1.load(filename);
   trimesh mesh2;
@@ -32,7 +32,7 @@ int main()
   // one is mesh1.vert_normal, the other is mesh1.vert_normal*-1
   
   std::cout << "?????" << endl;
-  int iters = 3;
+  int iters = 1;
   auto mesh_subdiv = subdiv(mesh1, iters); // face mesh subdivison with mid-points
   //mesh_subdiv.cal_vert_normal(mesh_subdiv.vertices, mesh_subdiv.faces);
 

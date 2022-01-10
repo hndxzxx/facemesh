@@ -2,6 +2,7 @@
 #include "trimesh.h"
 #include "util.h"
 #include <omp.h>
+#include<time.h>
 
 template <typename T>
 std::vector<std::array<T,3>> Vector2Array(const std::vector<std::vector<T>> & mat) {
@@ -22,6 +23,7 @@ std::vector<std::array<T,3>> Vector2Array(const std::vector<std::vector<T>> & ma
 std::vector<std::vector<double>> centroid(const std::vector<std::vector<double>> & verts, const std::vector<std::vector<int>> & faces)
 {
 	std::vector<std::vector<double>> centroid;
+
 	for (int i=0; i<faces.size(); i++)
 	{
 		auto idx_v1 = faces[i][0];
@@ -64,11 +66,19 @@ std::tuple< std::vector<std::vector<double>>, std::vector<std::vector<int>>, std
 	SDF tree(target_vert, target_face, target_cent);
 	tree.init();
 	tree.build();
-	std::vector<std::vector<double>> inter_pts;
-	std::vector<std::vector<int>> inter_idx_ray_vert;
-	std::vector<std::vector<int>> inter_idx_target_face;
+	std::vector<std::vector<double>> inter_pts(ray_pts.size(), vector<double>(3));
+	std::vector<std::vector<int>> inter_idx_ray_vert(ray_pts.size(), vector<int>(1));
+	std::vector<std::vector<int>> inter_idx_target_face(ray_pts.size(), vector<int>(1));
 	
 	int flag=0;
+	clock_t startTime,endTime;
+	startTime = clock();
+	omp_set_num_threads(8);
+	//#pragma omp parallel default(none) shared(ray_pts, ray_points,ray_direction, inter_pts,inter_idx_ray_vert,inter_idx_target_face, tree) 
+	#pragma omp parallel
+	{
+
+	#pragma omp for
 	for (int i=0; i<ray_pts.size(); i++)
 	{
 		std::array<double,3> ray_point = ray_points[i];
@@ -85,6 +95,8 @@ std::tuple< std::vector<std::vector<double>>, std::vector<std::vector<int>>, std
 		tie(inter_pt, inter_face_idx) = tree.query(ray_point, ray_dir);
 		tie(inter_pt_n, inter_face_idx_n) = tree.query(ray_point, ray_dir_n);
 		
+		//std::vector< std::array<int, 5> > vecs;
+		//vecs.reserve(10);
 		
 		double dist = std::numeric_limits<double>::max();
 		if (inter_pt.size()!=0){
@@ -104,37 +116,27 @@ std::tuple< std::vector<std::vector<double>>, std::vector<std::vector<int>>, std
 		
 		if (dist < 0.02&&dist<dist_n)
 			{
-			
-			std::vector<double> inter_pt_cor;
-			inter_pt_cor.push_back(inter_pt[0].at(0));
-			inter_pt_cor.push_back(inter_pt[0].at(1));
-			inter_pt_cor.push_back(inter_pt[0].at(2));
-			inter_pts.push_back(inter_pt_cor);
-			std::vector<int> inter_idx_per_face;
-			inter_idx_per_face.push_back(inter_face_idx[0].at(0));
-			std::vector<int> inter_idx_per_ray;
-			inter_idx_per_ray.push_back(i);
-			inter_idx_target_face.push_back(inter_idx_per_face);
-			inter_idx_ray_vert.push_back(inter_idx_per_ray);
+			inter_pts[i][0] = inter_pt[0].at(0);
+			inter_pts[i][1] = inter_pt[0].at(1);
+			inter_pts[i][2] = inter_pt[0].at(2);
+			inter_idx_target_face[i][0] = inter_face_idx[0].at(0);
+			inter_idx_ray_vert[i][0] = i;
 			}
 		else if (dist_n < 0.02&&dist_n<=dist)
 			{
-			
-			std::vector<double> inter_pt_cor;
-			inter_pt_cor.push_back(inter_pt_n[0].at(0));
-			inter_pt_cor.push_back(inter_pt_n[0].at(1));
-			inter_pt_cor.push_back(inter_pt_n[0].at(2));
-			inter_pts.push_back(inter_pt_cor);
-			std::vector<int> inter_idx_per_face;
-			inter_idx_per_face.push_back(inter_face_idx_n[0].at(0));
-			std::vector<int> inter_idx_per_ray;
-			inter_idx_per_ray.push_back(i);
-			inter_idx_target_face.push_back(inter_idx_per_face);
-			inter_idx_ray_vert.push_back(inter_idx_per_ray);
+			inter_pts[i][0] = inter_pt_n[0].at(0);
+			inter_pts[i][1] = inter_pt_n[0].at(1);
+			inter_pts[i][2] = inter_pt_n[0].at(2);
+			inter_idx_target_face[i][0] = inter_face_idx_n[0].at(0);
+			inter_idx_ray_vert[i][0] = i;
 			}
 		
 		
 	}
+	}
+	endTime = clock();
+    cout << "The run time is: " <<(double)(endTime - startTime)/CLOCKS_PER_SEC << "s" << endl;
+	
 
 	return std::make_tuple(inter_pts, inter_idx_target_face, inter_idx_ray_vert);
 

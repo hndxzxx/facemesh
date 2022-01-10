@@ -9,6 +9,7 @@
 
 ## ray-triangle.h
 1.ray_triangle(): do ray triangle intersecting<br>
+2. adding openmp supporting. It gives 6 times faster, when the ray size is 200k, and the target triangle size is 1000k.
 
 
 ## octree.h
