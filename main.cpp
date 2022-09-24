@@ -10,10 +10,10 @@
 # haha
 using namespace std;
 using namespace Eigen;
-
+# 远程修改在同一个文件中
 int main()
 {
-
+  
   std::string filename = "C:/Users/xxzeng/Desktop/Anaconda/C++/mesh/data/116_18_grin_reg_scan.obj";
   std::string scan_trans_path = "C:/Users/xxzeng/Desktop/Anaconda/C++/mesh/data/116_18_grin_scan_trans_simplified.obj";
   trimesh mesh1;
