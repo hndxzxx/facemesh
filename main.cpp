@@ -12,7 +12,7 @@ using namespace std;
 using namespace Eigen;
 # 尝试merge
 # 本地参考修改在同一个文件中
-
+$ merge
 # 远程修改在同一个文件中
 # 远程仓库得文件名称改变了
 int main()
