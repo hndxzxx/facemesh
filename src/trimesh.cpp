@@ -15,7 +15,7 @@ using namespace std;
 using std::ofstream;
 typedef std::map<std::string, int> BasePairMap;
 typedef std::map<int, int> IndexValueMap;
-
+# haha我自己的修改
 void trimesh::load(const std::string &filename)
 {
   std::ifstream file(filename);
