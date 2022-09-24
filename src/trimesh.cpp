@@ -10,7 +10,7 @@
 #include <iterator>
 #include <set>
 #include <map>
-
+/* modify */
 using namespace std;
 using std::ofstream;
 typedef std::map<std::string, int> BasePairMap;
