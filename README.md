@@ -1,5 +1,5 @@
 # this repo mainly focus on the mesh processing algorithms of faces.
-
+# pull request learn
 ## mesh.h/mesh.cpp
 1.load(), save(): mesh load/save function<br>
 2.cal_vert_normal(): calculating vertices normal just with averaging(non area weighting)<br>
